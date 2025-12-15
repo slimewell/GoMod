@@ -3,15 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/slimewell/GoMod/internal/ui"
 	"os"
+
+	"github.com/slimewell/GoMod/internal/ui"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
 	// Load saved config
-	cfg, _ := ui.LoadConfig() // Ignore errors, use defaults
+	cfg, err := ui.LoadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to load config: %v\n", err)
+		defaultCfg := ui.DefaultConfig()
+		cfg = &defaultCfg // Fallback to default
+	}
 
 	// Parse command-line flags
 	stereoSep := flag.Int("separation", cfg.StereoSep, "Stereo separation percentage (0-100)")
@@ -19,22 +25,15 @@ func main() {
 	flag.StringVar(theme, "t", cfg.Theme, "Color theme (shorthand)")
 	flag.Parse()
 
-	// Get file path argument
-	if flag.NArg() < 1 {
-		fmt.Fprintf(os.Stderr, "Usage: %s [options] <module-file>\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\nOptions:\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nSupported formats: .mod, .xm, .it, .s3m, and more\n")
-		fmt.Fprintf(os.Stderr, "Available themes: default, cyberpunk, peachy, purple, pastel, matrix, amber, green, ocean\n")
-		os.Exit(1)
-	}
+	filename := ""
+	if flag.NArg() > 0 {
+		filename = flag.Arg(0)
 
-	filename := flag.Arg(0)
-
-	// Validate file exists
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "Error: File not found: %s\n", filename)
-		os.Exit(1)
+		// Validate file exists
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "Error: File not found: %s\n", filename)
+			os.Exit(1)
+		}
 	}
 
 	// Validate stereo separation range
@@ -43,14 +42,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Save config for next time
+	// Save config for next time (only updates startup args, not dynamic file loads yet)
 	cfg.Theme = *theme
 	cfg.StereoSep = *stereoSep
-	cfg.LastUsed = filename
-	_ = ui.SaveConfig(cfg) // Ignore save errors
+	if filename != "" {
+		cfg.LastUsed = filename
+	}
+	if err := ui.SaveConfig(cfg); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to save config: %v\n", err)
+	}
 
 	// Create and run the TUI
-	model := ui.NewModel(filename, *stereoSep, *theme)
+	// NewModel now handles empty filename by opening the browser
+	model, err := ui.NewModel(filename, *stereoSep, *theme)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error initializing audio: %v\n", err)
+		os.Exit(1)
+	}
+
 	p := tea.NewProgram(model, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {

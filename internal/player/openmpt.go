@@ -140,6 +140,9 @@ func (m *Module) SetStereoSeparation(percent int) error {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil {
+		return fmt.Errorf("module is closed")
+	}
 
 	// OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT = 2
 	const OPENMPT_MODULE_RENDER_STEREOSEPARATION_PERCENT = 2
@@ -161,6 +164,9 @@ func (m *Module) SetInterpolationFilter(length int) error {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil {
+		return fmt.Errorf("module is closed")
+	}
 
 	const OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH = 3
 
@@ -193,12 +199,6 @@ func (m *Module) GetMetadata() Metadata {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
-	// Return cached metadata if available
-	if m.cachedMetadata != nil {
-		return *m.cachedMetadata
-	}
-
 	// Safety check
 	if m.mod == nil {
 		return Metadata{
@@ -208,6 +208,10 @@ func (m *Module) GetMetadata() Metadata {
 			Duration: 0,
 			Channels: 0,
 		}
+	}
+	// Return cached metadata if available
+	if m.cachedMetadata != nil {
+		return *m.cachedMetadata
 	}
 
 	// Cache metadata on first call (reduces CGo overhead)
@@ -361,6 +365,9 @@ func (m *Module) Read(buf []int16) int {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil { // Added nil check
+		return 0
+	}
 	if len(buf) == 0 {
 		return 0
 	}
@@ -402,6 +409,9 @@ func (m *Module) ToggleChannelMute(channel int) bool {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil { // Added nil check
+		return false
+	}
 
 	if channel < 0 || channel >= len(m.channelMuted) {
 		return false
@@ -426,6 +436,9 @@ func (m *Module) SoloChannel(channel int) {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil { // Added nil check
+		return
+	}
 
 	if channel < 0 || channel >= len(m.channelMuted) {
 		return
@@ -474,6 +487,9 @@ func (m *Module) IsChannelMuted(channel int) bool {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil { // Added nil check
+		return false
+	}
 	return m.channelMuted[channel]
 }
 
@@ -540,6 +556,9 @@ func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 func (m *Module) GetPatternView(pattern, row, numChannels, visibleRows int, channelVolumes []float64) PatternSnapshot {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.mod == nil { // Added nil check
+		return PatternSnapshot{}
+	}
 
 	snapshot := PatternSnapshot{
 		CurrentRow:     row,
@@ -553,6 +572,10 @@ func (m *Module) GetPatternView(pattern, row, numChannels, visibleRows int, chan
 
 // getPatternViewLocked is the internal helper that assumes the lock is held
 func (m *Module) getPatternViewLocked(currentPattern, currentRow, numChannels, visibleRows int, snapshot PatternSnapshot) PatternSnapshot {
+	// Mutex is expected to be held by caller (GetPatternView)
+	if m.mod == nil { // Added nil check
+		return PatternSnapshot{}
+	}
 	// Ensure cache is initialized
 	if m.patternCache == nil {
 		m.patternCache = make(map[int]*CachedPattern)

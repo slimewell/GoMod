@@ -16,6 +16,28 @@ const (
 	bufferSize = 1024
 )
 
+// NewAudioContext initializes the low-level audio driver.
+// This should be called ONCE per application lifetime.
+func NewAudioContext() (*oto.Context, error) {
+	// Initialize Oto with small buffer for low latency
+	// We MUST use NewContextWithOptions to control the device buffer size
+	// Default is often too large (200ms+), causing mute lag
+	options := &oto.NewContextOptions{
+		SampleRate:   sampleRate,
+		ChannelCount: channelCount,
+		Format:       2,                     // FormatSignedInt16LE
+		BufferSize:   60 * time.Millisecond, // ~60ms total device buffer
+	}
+
+	otoContext, ready, err := oto.NewContextWithOptions(options)
+	if err != nil {
+		return nil, err
+	}
+	<-ready
+
+	return otoContext, nil
+}
+
 // Player manages audio playback
 type Player struct {
 	module     *Module
@@ -39,24 +61,8 @@ type SyncState struct {
 	ChannelVolumes []float64
 }
 
-// NewPlayer creates a new player for the given module
-func NewPlayer(module *Module) (*Player, error) {
-	// Initialize Oto with small buffer for low latency
-	// We MUST use NewContextWithOptions to control the device buffer size
-	// Default is often too large (200ms+), causing mute lag
-	options := &oto.NewContextOptions{
-		SampleRate:   sampleRate,
-		ChannelCount: channelCount,
-		Format:       2,                     // FormatSignedInt16LE
-		BufferSize:   60 * time.Millisecond, // ~60ms total device buffer
-	}
-
-	otoContext, ready, err := oto.NewContextWithOptions(options)
-	if err != nil {
-		return nil, err
-	}
-	<-ready
-
+// NewPlayer creates a new player for the given module using an existing audio context
+func NewPlayer(otoContext *oto.Context, module *Module) (*Player, error) {
 	p := &Player{
 		module:     module,
 		otoContext: otoContext,
@@ -283,8 +289,9 @@ func (r *audioReader) Read(p []byte) (int, error) {
 	return bytesWritten, nil
 }
 
-// InstantMute toggles mute on a channel and performs a Flush & Seek to make it audible immediately
-func (p *Player) InstantMute(channel int) {
+// instantAction performs a common logic for instant mute/solo changes
+// It performs a flush & seek to make the change audible immediately (overcoming buffer latency)
+func (p *Player) instantAction(action func()) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -305,20 +312,17 @@ func (p *Player) InstantMute(channel int) {
 		seekTarget = 0
 	}
 
-	// 3. Log for debugging (Removed)
-	// fmt.Printf("[MUTE] Render: %.3f, Buf: %.3f (%dB), Target: %.3f\n", renderPos, bufferedSecs, unplayedBytes, seekTarget)
+	// 3. Perform the specific action (Mute/Solo)
+	action()
 
-	// 4. Toggle Mute
-	p.module.ToggleChannelMute(channel)
-
-	// 5. Seek Module to the "heard" position
+	// 4. Seek Module to the "heard" position
 	p.module.SetPositionSeconds(seekTarget)
 
-	// 6. Flush Oto buffer
+	// 5. Flush Oto buffer
 	// Reset clears the underlying buffer and pauses
 	p.otoPlayer.Reset()
 
-	// 7. Reset sync state to match the seek
+	// 6. Reset sync state to match the seek
 	p.queueMu.Lock()
 	p.stateQueue = p.stateQueue[:0]
 	// Reset samplesWritten so GetSyncedTime() remains accurate to the new position
@@ -326,54 +330,22 @@ func (p *Player) InstantMute(channel int) {
 	p.samplesWritten = int64(seekTarget * float64(sampleRate))
 	p.queueMu.Unlock()
 
-	// 8. Resume if we were playing
+	// 7. Resume if we were playing
 	if p.playing {
 		p.otoPlayer.Play()
 	}
 }
 
+// InstantMute toggles mute on a channel and performs a Flush & Seek to make it audible immediately
+func (p *Player) InstantMute(channel int) {
+	p.instantAction(func() {
+		p.module.ToggleChannelMute(channel)
+	})
+}
+
 // InstantSolo solos a channel (unmutes it, mutes others) with Flush & Seek
 func (p *Player) InstantSolo(channel int) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	if p.otoPlayer == nil || p.module == nil {
-		return
-	}
-
-	// 1. Get current positions
-	renderPos := p.module.GetPositionSeconds()
-
-	// 2. Calculate latency and seek target
-	unplayedBytes := p.otoPlayer.UnplayedBufferSize()
-	bytesPerSec := float64(sampleRate * 4)
-	bufferedSecs := float64(unplayedBytes) / bytesPerSec
-
-	seekTarget := renderPos - bufferedSecs
-	if seekTarget < 0 {
-		seekTarget = 0
-	}
-
-	// 3. Log for debugging (Removed)
-	// fmt.Printf("[SOLO] Render: %.3f, Buf: %.3f, Target: %.3f\n", renderPos, bufferedSecs, seekTarget)
-
-	// 4. Solo Channel
-	p.module.SoloChannel(channel)
-
-	// 5. Seek Module
-	p.module.SetPositionSeconds(seekTarget)
-
-	// 6. Flush Oto
-	p.otoPlayer.Reset()
-
-	// 7. Reset sync
-	p.queueMu.Lock()
-	p.stateQueue = p.stateQueue[:0]
-	p.samplesWritten = int64(seekTarget * float64(sampleRate))
-	p.queueMu.Unlock()
-
-	// 8. Resume
-	if p.playing {
-		p.otoPlayer.Play()
-	}
+	p.instantAction(func() {
+		p.module.SoloChannel(channel)
+	})
 }

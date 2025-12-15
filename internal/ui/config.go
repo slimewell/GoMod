@@ -41,9 +41,8 @@ func LoadConfig() (*Config, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Return default config if file doesn't exist
-			return &Config{
-				Theme: "default",
-			}, nil
+			defaultCfg := DefaultConfig()
+			return &defaultCfg, nil
 		}
 		return nil, err
 	}

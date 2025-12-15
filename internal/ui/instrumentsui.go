@@ -2,8 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"github.com/slimewell/GoMod/internal/player"
 	"strings"
+
+	"github.com/slimewell/GoMod/internal/player"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -60,7 +61,7 @@ func RenderInstrumentsCompact(instruments []player.Instrument, activeInstruments
 		var chip string
 		if isActive && brightness > 60 {
 			// Fully active (just triggered or sustaining)
-			chip = activeStyle.Render("★" + display)
+			chip = activeStyle.Render("○" + display)
 		} else if isActive && brightness > 0 {
 			// Fading out
 			chip = fadingStyle.Render("○" + display)
@@ -153,28 +154,4 @@ func RenderInstruments(instruments []player.Instrument, activeInstruments map[in
 	}
 
 	return strings.Join(lines, "\n")
-}
-
-// TrackActiveInstruments scans pattern data to find which instruments are currently playing
-func TrackActiveInstruments(mod *player.Module, currentRow int) map[int]int {
-	if mod == nil {
-		return nil
-	}
-
-	activeMap := make(map[int]int)
-	currentPattern := mod.GetCurrentPattern()
-	channels := mod.GetMetadata().Channels
-
-	// Check current row for instrument triggers
-	for ch := 0; ch < channels; ch++ {
-		// Get instrument from current row
-		instrument := mod.GetPatternRowChannelCommand(currentPattern, currentRow, ch, 1) // CommandInstrument = 1
-
-		if instrument > 0 {
-			// Set brightness to 100 (full) when triggered
-			activeMap[instrument] = 100
-		}
-	}
-
-	return activeMap
 }
