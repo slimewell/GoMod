@@ -10,24 +10,22 @@ package player
 // Force declaration if missing from pkg-config header path or visibility
 float openmpt_module_get_current_channel_vu_mono( openmpt_module * mod, int32_t channel );
 double openmpt_module_get_position_seconds( openmpt_module * mod );
+double openmpt_module_set_position_seconds( openmpt_module * mod, double seconds );
 int openmpt_module_set_render_param( openmpt_module * mod, int param, int32_t value );
 
 // Wrapper helpers to call interface function pointers safe from CGo
-// We don't need to store the interface struct in Go, we can just fetch it when needed.
-// It's a lightweight operation.
 
 int ext_set_channel_mute(openmpt_module_ext *mod_ext, int32_t channel, int mute) {
     if (!mod_ext) return 0;
     openmpt_module_ext_interface_interactive interactive;
     memset(&interactive, 0, sizeof(interactive));
 
-    // Retrieve the interactive interface
     if (openmpt_module_ext_get_interface(mod_ext, "interactive", &interactive, sizeof(interactive)) != 0) {
         if (interactive.set_channel_mute_status) {
             return interactive.set_channel_mute_status(mod_ext, channel, mute);
         }
     }
-    return 0; // Failed
+    return 0;
 }
 
 int ext_get_channel_mute(openmpt_module_ext *mod_ext, int32_t channel) {
@@ -40,7 +38,34 @@ int ext_get_channel_mute(openmpt_module_ext *mod_ext, int32_t channel) {
             return interactive.get_channel_mute_status(mod_ext, channel);
         }
     }
-    return 0; // Default to unmuted if failed
+    return 0;
+}
+
+// Set channel volume (0.0 to 1.0) - for HARD MUTE (instant silence)
+int ext_set_channel_volume(openmpt_module_ext *mod_ext, int32_t channel, double volume) {
+    if (!mod_ext) return 0;
+    openmpt_module_ext_interface_interactive interactive;
+    memset(&interactive, 0, sizeof(interactive));
+
+    if (openmpt_module_ext_get_interface(mod_ext, "interactive", &interactive, sizeof(interactive)) != 0) {
+        if (interactive.set_channel_volume) {
+            return interactive.set_channel_volume(mod_ext, channel, volume);
+        }
+    }
+    return 0;
+}
+
+double ext_get_channel_volume(openmpt_module_ext *mod_ext, int32_t channel) {
+    if (!mod_ext) return 1.0;
+    openmpt_module_ext_interface_interactive interactive;
+    memset(&interactive, 0, sizeof(interactive));
+
+    if (openmpt_module_ext_get_interface(mod_ext, "interactive", &interactive, sizeof(interactive)) != 0) {
+        if (interactive.get_channel_volume) {
+            return interactive.get_channel_volume(mod_ext, channel);
+        }
+    }
+    return 1.0;
 }
 
 */
@@ -211,6 +236,20 @@ func (m *Module) GetPositionSeconds() float64 {
 	return float64(C.openmpt_module_get_position_seconds(m.mod))
 }
 
+// SetPositionSeconds seeks to the specified position in seconds
+// Returns the actual position after seeking
+func (m *Module) SetPositionSeconds(seconds float64) float64 {
+	if m == nil {
+		return 0
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.mod == nil {
+		return 0
+	}
+	return float64(C.openmpt_module_set_position_seconds(m.mod, C.double(seconds)))
+}
+
 func (m *Module) getMetadataString(key string) string {
 	// Mutex is expected to be held by caller (GetMetadata)
 
@@ -254,6 +293,19 @@ func (m *Module) GetCurrentPattern() int {
 		return 0
 	}
 	return int(C.openmpt_module_get_current_pattern(m.mod))
+}
+
+// GetNumChannels returns the number of channels
+func (m *Module) GetNumChannels() int {
+	if m == nil {
+		return 0
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.mod == nil {
+		return 0
+	}
+	return int(C.openmpt_module_get_num_channels(m.mod))
 }
 
 // GetNumPatterns returns the total number of patterns
@@ -452,6 +504,7 @@ type CachedPattern struct {
 }
 
 // GetPatternSnapshot efficiently retrieves a range of pattern data
+// Deprecated: Use GetSyncedState in player and GetPatternView instead for synced playback
 func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 	if m == nil {
 		return PatternSnapshot{}
@@ -466,8 +519,6 @@ func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 	currentRow := int(C.openmpt_module_get_current_row(m.mod))
 	currentPattern := int(C.openmpt_module_get_current_pattern(m.mod))
 	numChannels := int(C.openmpt_module_get_num_channels(m.mod))
-	// No CGo call needed for numRows if we have it cached, but we need it to check cache or load
-	numRows := int(C.openmpt_module_get_pattern_num_rows(m.mod, C.int(currentPattern)))
 
 	snapshot := PatternSnapshot{
 		CurrentRow:     currentRow,
@@ -476,13 +527,32 @@ func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 		ChannelVolumes: make([]float64, numChannels),
 	}
 
-	// Fetch VU data (fast/essential, so we keep doing this every frame)
+	// Fetch VU data
 	for ch := 0; ch < numChannels; ch++ {
 		snapshot.ChannelVolumes[ch] = float64(C.openmpt_module_get_current_channel_vu_mono(m.mod, C.int(ch)))
 	}
 
-	// --- PATTERN CACHING START ---
+	return m.getPatternViewLocked(currentPattern, currentRow, numChannels, visibleRows, snapshot)
+}
 
+// GetPatternView returns the pattern view for a specific state (pattern/row)
+// This is used by the UI to render a "past" state that matches audio playback
+func (m *Module) GetPatternView(pattern, row, numChannels, visibleRows int, channelVolumes []float64) PatternSnapshot {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	snapshot := PatternSnapshot{
+		CurrentRow:     row,
+		CurrentPattern: pattern,
+		NumChannels:    numChannels,
+		ChannelVolumes: channelVolumes,
+	}
+
+	return m.getPatternViewLocked(pattern, row, numChannels, visibleRows, snapshot)
+}
+
+// getPatternViewLocked is the internal helper that assumes the lock is held
+func (m *Module) getPatternViewLocked(currentPattern, currentRow, numChannels, visibleRows int, snapshot PatternSnapshot) PatternSnapshot {
 	// Ensure cache is initialized
 	if m.patternCache == nil {
 		m.patternCache = make(map[int]*CachedPattern)
@@ -492,7 +562,9 @@ func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 	cached, exists := m.patternCache[currentPattern]
 	if !exists {
 		// Cache Miss: Load the ENTIRE pattern now
-		// This is a heavy operation, but only happens once per pattern visit
+		// First get num rows for this pattern
+		numRows := int(C.openmpt_module_get_pattern_num_rows(m.mod, C.int(currentPattern)))
+
 		rows := make([]PatternRow, numRows)
 
 		for r := 0; r < numRows; r++ {
@@ -515,8 +587,6 @@ func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 		m.patternCache[currentPattern] = cached
 	}
 
-	// --- PATTERN CACHING END ---
-
 	// Calculate range for "Typewriter" style scrolling
 	half := visibleRows / 2
 	startRow := currentRow - half
@@ -529,7 +599,6 @@ func (m *Module) GetPatternSnapshot(visibleRows int) PatternSnapshot {
 			snapshot.Rows = append(snapshot.Rows, cached.Rows[r])
 		} else {
 			// Out of bounds (before start or after end of pattern)
-			// Return empty row structure with correct row number for UI
 			snapshot.Rows = append(snapshot.Rows, PatternRow{
 				RowNumber: r,
 				// Empty channels

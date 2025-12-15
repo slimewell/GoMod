@@ -26,100 +26,80 @@ type ColorPalette struct {
 // DefaultPalette returns the default color scheme
 func DefaultPalette() ColorPalette {
 	return ColorPalette{
-		Title:     lipgloss.Color("86"),  // Light cyan
-		InfoLabel: lipgloss.Color("241"), // Gray
-		InfoValue: lipgloss.Color("147"), // Light purple
+		Title:     lipgloss.Color("#EAE0CF"), // Cream
+		InfoLabel: lipgloss.Color("#94A3B8"), // Slate gray
+		InfoValue: lipgloss.Color("#E2E8F0"), // Light slate
 
-		RowNumber:    lipgloss.Color("240"), // Dark gray
-		CurrentRow:   lipgloss.Color("15"),  // White
-		CurrentRowBg: lipgloss.Color("239"), // Medium gray background
-		Note:         lipgloss.Color("51"),  // Cyan
-		Instrument:   lipgloss.Color("226"), // Yellow
-		Volume:       lipgloss.Color("141"), // Purple
-		Effect:       lipgloss.Color("118"), // Green
+		RowNumber:    lipgloss.Color("#64748B"), // Medium slate
+		CurrentRow:   lipgloss.Color("#EAE0CF"), // Cream
+		CurrentRowBg: lipgloss.Color("#334155"), // Dark slate
+		Note:         lipgloss.Color("#E2E8F0"), // Light slate
+		Instrument:   lipgloss.Color("#CBD5E1"), // Slate 300
+		Volume:       lipgloss.Color("#94A3B8"), // Slate 400
+		Effect:       lipgloss.Color("#64748B"), // Slate 500
 
-		Border:   lipgloss.Color("240"), // Dark gray
-		Controls: lipgloss.Color("240"), // Dark gray
-	}
-}
-
-// CyberpunkPalette returns a vibrant cyberpunk color scheme
-func CyberpunkPalette() ColorPalette {
-	return ColorPalette{
-		Title:     lipgloss.Color("201"), // Hot pink
-		InfoLabel: lipgloss.Color("93"),  // Purple
-		InfoValue: lipgloss.Color("51"),  // Cyan
-
-		RowNumber:    lipgloss.Color("240"), // Dark gray
-		CurrentRow:   lipgloss.Color("15"),  // White
-		CurrentRowBg: lipgloss.Color("53"),  // Dark purple background
-		Note:         lipgloss.Color("51"),  // Bright cyan
-		Instrument:   lipgloss.Color("201"), // Hot pink
-		Volume:       lipgloss.Color("213"), // Light pink
-		Effect:       lipgloss.Color("46"),  // Bright green
-
-		Border:   lipgloss.Color("93"), // Purple
-		Controls: lipgloss.Color("93"), // Purple
+		Border:   lipgloss.Color("#475569"), // Slate 600
+		Controls: lipgloss.Color("#94A3B8"), // Slate 400
 	}
 }
 
 // RetroAmberPalette returns a retro amber monochrome scheme
 func RetroAmberPalette() ColorPalette {
 	return ColorPalette{
-		Title:     lipgloss.Color("214"), // Orange
-		InfoLabel: lipgloss.Color("58"),  // Dark orange
-		InfoValue: lipgloss.Color("220"), // Light orange
+		Title:     lipgloss.Color("#FFB000"), // Warm amber
+		InfoLabel: lipgloss.Color("#D99058"), // Dark orange
+		InfoValue: lipgloss.Color("#FFC947"), // Light amber
 
-		RowNumber:    lipgloss.Color("94"),  // Dark brown
-		CurrentRow:   lipgloss.Color("220"), // Bright orange
-		CurrentRowBg: lipgloss.Color("58"),  // Dark orange background
-		Note:         lipgloss.Color("214"), // Orange
-		Instrument:   lipgloss.Color("220"), // Light orange
-		Volume:       lipgloss.Color("178"), // Medium orange
-		Effect:       lipgloss.Color("172"), // Darker orange
+		RowNumber:    lipgloss.Color("#D99058"), // Clean dark orange
+		CurrentRow:   lipgloss.Color("#FFFFFF"), // White
+		CurrentRowBg: lipgloss.Color("#E65100"), // Deep rich orange
+		Note:         lipgloss.Color("#FFB000"), // Warm amber
+		Instrument:   lipgloss.Color("#FFC947"), // Light amber
+		Volume:       lipgloss.Color("#FF9500"), // Deep amber
+		Effect:       lipgloss.Color("#FFCC80"), // Pale amber
 
-		Border:   lipgloss.Color("58"), // Dark orange
-		Controls: lipgloss.Color("58"), // Dark orange
+		Border:   lipgloss.Color("#D99058"),
+		Controls: lipgloss.Color("#FFB000"),
 	}
 }
 
 // GreenScreenPalette returns a classic green monochrome scheme
 func GreenScreenPalette() ColorPalette {
 	return ColorPalette{
-		Title:     lipgloss.Color("46"), // Bright green
-		InfoLabel: lipgloss.Color("22"), // Dark green
-		InfoValue: lipgloss.Color("83"), // Light green
+		Title:     lipgloss.Color("#33FF33"), // Classic phosphor green
+		InfoLabel: lipgloss.Color("#2E8B57"), // SeaGreen
+		InfoValue: lipgloss.Color("#90EE90"), // LightGreen
 
-		RowNumber:    lipgloss.Color("28"), // Medium dark green
-		CurrentRow:   lipgloss.Color("46"), // Bright green
-		CurrentRowBg: lipgloss.Color("22"), // Dark green background
-		Note:         lipgloss.Color("46"), // Bright green
-		Instrument:   lipgloss.Color("83"), // Light green
-		Volume:       lipgloss.Color("77"), // Medium green
-		Effect:       lipgloss.Color("71"), // Pale green
+		RowNumber:    lipgloss.Color("#228B22"), // ForestGreen
+		CurrentRow:   lipgloss.Color("#FFFFFF"), // White
+		CurrentRowBg: lipgloss.Color("#006400"), // DarkGreen
+		Note:         lipgloss.Color("#33FF33"), // Classic phosphor green
+		Instrument:   lipgloss.Color("#98FB98"), // PaleGreen
+		Volume:       lipgloss.Color("#32CD32"), // LimeGreen
+		Effect:       lipgloss.Color("#00FF7F"), // SpringGreen
 
-		Border:   lipgloss.Color("22"), // Dark green
-		Controls: lipgloss.Color("22"), // Dark green
+		Border:   lipgloss.Color("#2E8B57"), // SeaGreen
+		Controls: lipgloss.Color("#3CB371"), // MediumSeaGreen
 	}
 }
 
 // OceanPalette returns a calm blue/teal color scheme
 func OceanPalette() ColorPalette {
 	return ColorPalette{
-		Title:     lipgloss.Color("81"),  // Bright cyan
-		InfoLabel: lipgloss.Color("24"),  // Dark blue
-		InfoValue: lipgloss.Color("117"), // Light blue
+		Title:     lipgloss.Color("#06B6D4"), // Vibrant cyan
+		InfoLabel: lipgloss.Color("#155E75"), // Deep teal
+		InfoValue: lipgloss.Color("#67E8F9"), // Light cyan
 
-		RowNumber:    lipgloss.Color("239"), // Gray
-		CurrentRow:   lipgloss.Color("15"),  // White
-		CurrentRowBg: lipgloss.Color("24"),  // Dark blue background
-		Note:         lipgloss.Color("81"),  // Bright cyan
-		Instrument:   lipgloss.Color("117"), // Light blue
-		Volume:       lipgloss.Color("75"),  // Teal
-		Effect:       lipgloss.Color("43"),  // Aqua
+		RowNumber:    lipgloss.Color("#0E7490"), // Dark cyan
+		CurrentRow:   lipgloss.Color("#E0F2FE"), // Very light blue
+		CurrentRowBg: lipgloss.Color("#164E63"), // Deep ocean blue
+		Note:         lipgloss.Color("#22D3EE"), // Bright cyan
+		Instrument:   lipgloss.Color("#67E8F9"), // Light cyan
+		Volume:       lipgloss.Color("#06B6D4"), // Vibrant cyan
+		Effect:       lipgloss.Color("#5EEAD4"), // Teal
 
-		Border:   lipgloss.Color("24"), // Dark blue
-		Controls: lipgloss.Color("24"), // Dark blue
+		Border:   lipgloss.Color("#155E75"), // Deep teal
+		Controls: lipgloss.Color("#0E7490"), // Dark cyan
 	}
 }
 
@@ -186,28 +166,26 @@ func PastelPalette() ColorPalette {
 // MatrixPalette returns a bright matrix-style green palette
 func MatrixPalette() ColorPalette {
 	return ColorPalette{
-		Title:     lipgloss.Color("#08CB00"), // Bright green
-		InfoLabel: lipgloss.Color("#056600"), // Dark green
-		InfoValue: lipgloss.Color("#0aff00"), // Neon green
+		Title:     lipgloss.Color("#00FF41"), // Matrix green
+		InfoLabel: lipgloss.Color("#003B00"), // Very dark green
+		InfoValue: lipgloss.Color("#8AFF8A"), // Bright lime
 
-		RowNumber:    lipgloss.Color("#056600"), // Dark green
-		CurrentRow:   lipgloss.Color("#0aff00"), // Neon green
-		CurrentRowBg: lipgloss.Color("#003300"), // Very dark green
-		Note:         lipgloss.Color("#08CB00"), // Bright green
-		Instrument:   lipgloss.Color("#0aff00"), // Neon green
-		Volume:       lipgloss.Color("#05a600"), // Medium green
-		Effect:       lipgloss.Color("#03d600"), // Lime green
+		RowNumber:    lipgloss.Color("#00802B"), // Forest green
+		CurrentRow:   lipgloss.Color("#FFFFFF"), // White
+		CurrentRowBg: lipgloss.Color("#004400"), // Brighter dark green
+		Note:         lipgloss.Color("#00FF41"), // Matrix green
+		Instrument:   lipgloss.Color("#39FF14"), // Neon green
+		Volume:       lipgloss.Color("#00D936"), // Vivid green
+		Effect:       lipgloss.Color("#7FFF00"), // Chartreuse
 
-		Border:   lipgloss.Color("#08CB00"),
-		Controls: lipgloss.Color("#08CB00"),
+		Border:   lipgloss.Color("#00802B"), // Forest green
+		Controls: lipgloss.Color("#00B33C"), // Medium green
 	}
 }
 
 // GetPalette returns a palette by name
 func GetPalette(name string) ColorPalette {
 	switch name {
-	case "cyberpunk":
-		return CyberpunkPalette()
 	case "amber":
 		return RetroAmberPalette()
 	case "green":

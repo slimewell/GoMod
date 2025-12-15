@@ -5,31 +5,31 @@ A modern, high-performance TUI (Terminal User Interface) tracker music player fo
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Go Version](https://img.shields.io/badge/go-1.25%2B-00ADD8)
 
-## Features
+##  Features
 
 ### Playback & Audio
-- **High-Quality Audio** - Windowed sinc interpolation for pristine sound
--  **Live Stereo Control** - Adjust stereo separation in real-time (0-200%)
--  **Playback Controls** - Pause/resume with spacebar
--  **Accurate Timing** - Direct position tracking from libopenmpt
+-  **High-Quality Audio** - Windowed sinc interpolation for pristine sound
+- 🎛️ **Live Stereo Control** - Adjust stereo separation in real-time (0-200%)
+- ⏯️ **Playback Controls** - Pause/resume with spacebar
+- 🎯 **Accurate Timing** - Direct position tracking from libopenmpt
 
 ### Visualization
--  **Real-time Pattern View** - Typewriter-style scrolling tracker display
--  **Channel VU Meters** - 3-row vertical bars with smooth gravity physics
+- 📊 **Real-time Pattern View** - Typewriter-style scrolling tracker display
+- 📈 **Channel VU Meters** - 3-row vertical bars with smooth gravity physics
 -  **9 Color Themes** - Peachy, Purple, Pastel, Matrix, Cyberpunk, and more
--  **Active Instrument Tracking** - See which instruments are playing
+- 🎹 **Active Instrument Tracking** - See which instruments are playing
 
 ### Channel Control
--  **Channel Muting** - Mute/unmute individual channels (1-9, 0, -, =)
--  **Channel Soloing** - Solo channels with Shift+key
--  **Visual Feedback** - Muted channels shown dimmed in pattern and VU meters
+- 🔇 **Channel Muting** - Mute/unmute individual channels (1-9, 0, -, =)
+- 🎚️ **Channel Soloing** - Solo channels with Shift+key
+- 👁️ **Visual Feedback** - Muted channels shown dimmed in pattern and VU meters
 
 ### Performance
--  **Optimized CGo** - Pattern caching eliminates ~2,600 CGo calls per frame
--  **Metadata Caching** - One-time fetch of immutable module data
+- ⚡ **Optimized CGo** - Pattern caching eliminates ~2,600 CGo calls per frame
+- 💾 **Metadata Caching** - One-time fetch of immutable module data
 -  **60 FPS UI** - Smooth, responsive interface
 
-##  Supported Formats
+## 🎼 Supported Formats
 
 - `.mod` (ProTracker)
 - `.xm` (FastTracker II)
@@ -37,11 +37,15 @@ A modern, high-performance TUI (Terminal User Interface) tracker music player fo
 - `.s3m` (ScreamTracker 3)
 - And 20+ more via libopenmpt!
 
-##  Installation
+## 📦 Installation
 
 ### Prerequisites
 
 Install `libopenmpt`:
+
+```bash
+brew install libopenmpt
+```
 
 ### Build from Source
 
@@ -62,50 +66,62 @@ sudo cp gomod /usr/local/bin/
 ##  Usage
 
 ```bash
-# Play a module
-gomod song.xm
-
-# With custom stereo separation (0-200, default 100)
-gomod -separation 150 song.mod
-
-# Choose a theme
-gomod -theme peachy song.it
-gomod -t cyberpunk song.s3m
+go build -o gomod ./cmd/modtui
+./gomod path/to/your/module.xm
 ```
 
-### Keyboard Controls
+Or run directly:
+```bash
+go run ./cmd/modtui path/to/your/module.xm
+```
+
+### Install to System
+
+```bash
+go build -o gomod ./cmd/modtui
+sudo mv gomod /usr/local/bin/
+```
+
+## Usage
+
+```bash
+gomod <module-file>
+```
+
+### Controls
 
 | Key | Action |
 |-----|--------|
-| `Space` | Pause/Resume |
-| `[` / `]` | Decrease/Increase Stereo Separation |
-| `1-9,0,-,=` | Mute/Unmute Channels 1-12 |
-| `Shift+1-9,0,-,=` | Solo Channels 1-12 |
-| `q` / `Ctrl+C` | Quit |
+| **Space** | Play/Pause |
+| **Q** | Quit |
+| **T** | Cycle themes (9 available) |
+| **[ ]** | Adjust stereo separation (0-200%) |
+| **1-9, 0, -, =** | Mute/unmute channels (hex-style: 1=Ch0, 0=Ch9, -=Ch10, ==Ch11) |
+| **Shift + 1-9, 0, -, =** | Solo channel (unmute one, mute all others) |
 
-### Available Themes
+### Themes
 
-**Gradient Palettes:**
-- `peachy` - Soft peachy-pink gradient
-- `purple` - Vibrant purple-to-pink gradient
-- `pastel` - Soft multi-color pastels
-- `matrix` - Bright neon matrix green
+GoMod includes 9 carefully crafted color themes:
+- **Default** - Classic tracker aesthetic
+- **Gruvbox** - Warm, retro palette
+- **Nord** - Cool, minimal blues
+- **Dracula** - Purple-tinted dark mode
+- **Monokai** - Vibrant syntax-inspired
+- **Solarized** - Precision-balanced contrast
+- **Cyberpunk** - Neon-soaked future
+- **Matrix** - Green-on-black terminal
+- **Sunset** - Warm orange gradients
 
-**Classic Palettes:**
-- `default` - Clean cyan/yellow/purple
-- `cyberpunk` - Hot pink and neon cyan
-- `amber` - Retro monochrome amber CRT
-- `green` - Classic green screen terminal
-- `ocean` - Calm blues and teals
+Press **T** to cycle through them in real-time.
 
-##  Configuration
+## Configuration
 
-GoMod saves preferences to `~/.modtui.json`:
+GoMod saves preferences to `~/.gomod.json`:
 - Theme choice
 - Stereo separation
 - Last played file
 
-##  Architecture
+## 🏗️ Architecture
 
 ### Tech Stack
 - **[libopenmpt](https://lib.openmpt.org/)** - Tracker file decoding (Extended API for channel control)
@@ -119,9 +135,18 @@ GoMod saves preferences to `~/.modtui.json`:
 - **Lazy Interface Fetching** - Extended API interfaces retrieved on-demand
 - **VU Smoothing** - Exponential decay (0.92) with instant attack
 
-##  Contributing
+## 🗺️ Roadmap
 
-Contributions welcome!
+- [ ] Oscilloscope/Waveform Visualizer
+- [ ] Seeking (arrow keys)
+- [ ] Playlist Support
+- [ ] Volume Ramping (click reduction)
+- [ ] Hard Mute Mode (instant silence)
+- [ ] Export to WAV
+
+## 🤝 Contributing
+
+Contributions welcome! This project follows standard Go conventions.
 
 ## 📄 License
 

@@ -3,8 +3,9 @@ package ui
 import (
 	"context"
 	"fmt"
-	"github.com/slimewell/GoMod/internal/player"
 	"time"
+
+	"github.com/slimewell/GoMod/internal/player"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -174,7 +175,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					ch = 11
 				}
 				if ch != -1 {
-					m.module.ToggleChannelMute(ch)
+					if m.player != nil {
+						m.player.InstantMute(ch)
+					}
 				}
 			}
 			return m, nil
@@ -210,7 +213,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					ch = 11
 				}
 				if ch != -1 {
-					m.module.SoloChannel(ch)
+					if m.player != nil {
+						m.player.InstantSolo(ch)
+					}
 				}
 			}
 			return m, nil
@@ -243,13 +248,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tickMsg:
 		if m.ready {
 			// Only update estimated time if playing
+			var currentRow, currentPattern int
+			var currentVolumes []float64
+
+			// Get synced state from player
 			if m.player != nil && m.player.IsPlaying() {
-				// Update current time (accurate)
-				m.currentTime = m.module.GetPositionSeconds()
+				// Update current time (accurate to hardware)
+				m.currentTime = m.player.GetSyncedTime()
+
+				// Get synced pattern/row/volume state
+				currentPattern, currentRow, currentVolumes = m.player.GetSyncedState()
+			} else {
+				// Fallback to "live" state if not playing
+				currentRow = m.module.GetCurrentRow()
+				currentPattern = m.module.GetCurrentPattern()
+				// We won't have volumes here easily without helper, but that's fine for paused state
 			}
 
-			// Update active instruments
-			currentRow := m.module.GetCurrentRow()
+			// Update active instruments (using synced row)
 			newActives := TrackActiveInstruments(m.module, currentRow)
 
 			// Merge with existing (for fade effect later)
@@ -270,8 +286,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-			// Update pattern data snapshot (safely locked)
-			m.patternData = m.module.GetPatternSnapshot(m.visibleRows)
+			// Update pattern data snapshot (using synced state)
+			m.patternData = m.module.GetPatternView(currentPattern, currentRow, m.module.GetNumChannels(), m.visibleRows, currentVolumes)
 
 			// Apply gravity/smoothing to VU meters
 			newVolumes := m.patternData.ChannelVolumes

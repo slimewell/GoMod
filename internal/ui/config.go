@@ -27,35 +27,37 @@ func configPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".modtui.json"), nil
+	return filepath.Join(home, ".gomod.json"), nil
 }
 
-// LoadConfig loads configuration from ~/.modtui.json
-func LoadConfig() (Config, error) {
+// LoadConfig loads configuration from ~/.gomod.json
+func LoadConfig() (*Config, error) {
 	path, err := configPath()
 	if err != nil {
-		return DefaultConfig(), err
+		return nil, err
 	}
 
 	data, err := os.ReadFile(path)
 	if err != nil {
-		// File doesn't exist, return defaults
 		if os.IsNotExist(err) {
-			return DefaultConfig(), nil
+			// Return default config if file doesn't exist
+			return &Config{
+				Theme: "default",
+			}, nil
 		}
-		return DefaultConfig(), err
+		return nil, err
 	}
 
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return DefaultConfig(), err
+	var config Config
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, err
 	}
 
-	return cfg, nil
+	return &config, nil
 }
 
-// SaveConfig saves configuration to ~/.modtui.json
-func SaveConfig(cfg Config) error {
+// SaveConfig saves configuration to ~/.gomod.json
+func SaveConfig(cfg *Config) error {
 	path, err := configPath()
 	if err != nil {
 		return err
