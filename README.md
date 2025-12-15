@@ -9,27 +9,27 @@ A modern, high-performance TUI (Terminal User Interface) tracker music player fo
 
 ### Playback & Audio
 -  **High-Quality Audio** - Windowed sinc interpolation for pristine sound
-- 🎛️ **Live Stereo Control** - Adjust stereo separation in real-time (0-200%)
-- ⏯️ **Playback Controls** - Pause/resume with spacebar
-- 🎯 **Accurate Timing** - Direct position tracking from libopenmpt
+-  **Live Stereo Control** - Adjust stereo separation in real-time (0-200%)
+-  **Playback Controls** - Pause/resume with spacebar
+-  **Accurate Timing** - Direct position tracking from libopenmpt
 
 ### Visualization
-- 📊 **Real-time Pattern View** - Typewriter-style scrolling tracker display
-- 📈 **Channel VU Meters** - 3-row vertical bars with smooth gravity physics
+-  **Real-time Pattern View** - Typewriter-style scrolling tracker display
+-  **Channel VU Meters** - 3-row vertical bars with smooth gravity physics
 -  **9 Color Themes** - Peachy, Purple, Pastel, Matrix, Cyberpunk, and more
-- 🎹 **Active Instrument Tracking** - See which instruments are playing
+-  **Active Instrument Tracking** - See which instruments are playing
 
 ### Channel Control
-- 🔇 **Channel Muting** - Mute/unmute individual channels (1-9, 0, -, =)
-- 🎚️ **Channel Soloing** - Solo channels with Shift+key
-- 👁️ **Visual Feedback** - Muted channels shown dimmed in pattern and VU meters
+-  **Channel Muting** - Mute/unmute individual channels (1-9, 0, -, =)
+-  **Channel Soloing** - Solo channels with Shift+key
+-  **Visual Feedback** - Muted channels shown dimmed in pattern and VU meters
 
 ### Performance
-- ⚡ **Optimized CGo** - Pattern caching eliminates ~2,600 CGo calls per frame
-- 💾 **Metadata Caching** - One-time fetch of immutable module data
+-  **Optimized CGo** - Pattern caching eliminates ~2,600 CGo calls per frame
+-  **Metadata Caching** - One-time fetch of immutable module data
 -  **60 FPS UI** - Smooth, responsive interface
 
-## 🎼 Supported Formats
+## Supported Formats
 
 - `.mod` (ProTracker)
 - `.xm` (FastTracker II)
@@ -37,7 +37,7 @@ A modern, high-performance TUI (Terminal User Interface) tracker music player fo
 - `.s3m` (ScreamTracker 3)
 - And 20+ more via libopenmpt!
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -75,15 +75,7 @@ Or run directly:
 go run ./cmd/modtui path/to/your/module.xm
 ```
 
-### Install to System
-
-```bash
-go build -o gomod ./cmd/modtui
-sudo mv gomod /usr/local/bin/
-```
-
-## Usage
-
+When in PATH:
 ```bash
 gomod <module-file>
 ```
@@ -121,7 +113,7 @@ GoMod saves preferences to `~/.gomod.json`:
 - Stereo separation
 - Last played file
 
-## 🏗️ Architecture
+## Architecture
 
 ### Tech Stack
 - **[libopenmpt](https://lib.openmpt.org/)** - Tracker file decoding (Extended API for channel control)
@@ -135,18 +127,9 @@ GoMod saves preferences to `~/.gomod.json`:
 - **Lazy Interface Fetching** - Extended API interfaces retrieved on-demand
 - **VU Smoothing** - Exponential decay (0.92) with instant attack
 
-## 🗺️ Roadmap
+## Contributing
 
-- [ ] Oscilloscope/Waveform Visualizer
-- [ ] Seeking (arrow keys)
-- [ ] Playlist Support
-- [ ] Volume Ramping (click reduction)
-- [ ] Hard Mute Mode (instant silence)
-- [ ] Export to WAV
-
-## 🤝 Contributing
-
-Contributions welcome! This project follows standard Go conventions.
+Contributions welcome!
 
 ## 📄 License
 
